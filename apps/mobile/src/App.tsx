@@ -16,6 +16,11 @@ export default function App() {
   const loadPlaylists = usePlaylistStore(s => s.loadPlaylists);
   const playlistCount = usePlaylistStore(s => s.playlists.length);
   const loadSettings = useSettingsStore(s => s.loadSettings);
+  const togglePlay = usePlayerStore(s => s.togglePlay);
+  const skipNext = usePlayerStore(s => s.skipNext);
+  const skipPrev = usePlayerStore(s => s.skipPrev);
+  const toggleShuffle = usePlayerStore(s => s.toggleShuffle);
+  const toggleRepeat = usePlayerStore(s => s.toggleRepeat);
   const currentTrackId = usePlayerStore(s => s.currentTrackId);
   const startupSawLoadingRef = useRef(false);
   const startupLoggedRef = useRef(false);
@@ -35,6 +40,7 @@ export default function App() {
   useEffect(() => {
     const timer = window.setTimeout(() => {
       setHasMinSplashElapsed(true);
+      setIsStartupReady(true);
     }, 1500);
 
     return () => window.clearTimeout(timer);
@@ -83,10 +89,73 @@ export default function App() {
 
   // When a track starts playing, open player tab on mobile
   useEffect(() => {
+    if (!window.api?.window?.onTrayPlayerCommand) return;
+    return window.api.window.onTrayPlayerCommand(command => {
+      if (command === 'toggle-play') {
+        togglePlay();
+        return;
+      }
+      if (command === 'next-track') {
+        skipNext();
+        return;
+      }
+      if (command === 'previous-track') {
+        skipPrev();
+        return;
+      }
+      if (command === 'toggle-shuffle') {
+        toggleShuffle();
+        return;
+      }
+      if (command === 'toggle-repeat') {
+        toggleRepeat();
+      }
+    });
+  }, [skipNext, skipPrev, togglePlay, toggleRepeat, toggleShuffle]);
+
+  useEffect(() => {
     if (currentTrackId) {
       setMobileTab('player');
     }
   }, [currentTrackId]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.code === 'Space') {
+        const target = e.target as HTMLElement;
+        const isInput =
+          target.tagName === 'INPUT' ||
+          target.tagName === 'TEXTAREA' ||
+          target.isContentEditable ||
+          target.closest('input, textarea, [contenteditable="true"]');
+
+        if (isInput) return;
+
+        e.preventDefault();
+        togglePlay();
+        return;
+      }
+
+      const target = e.target as HTMLElement;
+      const isInput =
+        target.tagName === 'INPUT' ||
+        target.tagName === 'TEXTAREA' ||
+        target.isContentEditable ||
+        target.closest('input, textarea, [contenteditable="true"]');
+      if (isInput) return;
+
+      if (e.code === 'ArrowRight') {
+        e.preventDefault();
+        skipNext();
+      } else if (e.code === 'ArrowLeft') {
+        e.preventDefault();
+        skipPrev();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [skipNext, skipPrev, togglePlay]);
 
   return (
     <div className={`app-root${isAppVisible ? ' startup-app-visible' : ' startup-app-hidden'}${isDashboardIntroActive ? ' startup-dashboard-intro' : ''}`}>
