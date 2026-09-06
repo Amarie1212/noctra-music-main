@@ -1,6 +1,6 @@
 import { initMobileApiBridge } from './mockApi';
 
-// MUST initialize window.api before any stores or components are imported/executed
+// Initialize the mobile API bridge immediately
 initMobileApiBridge();
 
 import React from 'react';
@@ -10,32 +10,39 @@ import './styles/global.css';
 import './styles/mobile-adjustments.css';
 import { applyCachedThemeSnapshot } from './store';
 
-console.log('Mobile Renderer: main.tsx starting');
+console.log('Mobile Renderer: NOCTRA booting...');
 
-window.onerror = (msg, url, line, col, error) => {
-  console.error('Mobile Fatal Error:', msg, error);
+window.onerror = (msg, _url, _line, _col, error) => {
+  console.error('Mobile Error:', msg, error);
   document.getElementById('boot-splash')?.remove();
-  document.body.innerHTML = `<div style="color: white; background: #1a0000; padding: 20px; font-family: sans-serif;">
-    <h2>NOCTRA Startup Error</h2>
-    <p>${msg}</p>
-    <pre style="white-space: pre-wrap; font-size: 12px; color: #ff8888;">${error?.stack || ''}</pre>
-  </div>`;
+  const root = document.getElementById('root');
+  if (root) {
+    root.innerHTML = `<div style="color: white; background: #1a0000; padding: 20px; font-family: sans-serif;">
+      <h2>NOCTRA Startup Error</h2>
+      <p>${msg}</p>
+      <pre style="white-space: pre-wrap; font-size: 12px; color: #ff8888;">${error?.stack || ''}</pre>
+    </div>`;
+  }
 };
 
 async function bootstrap() {
   try {
     applyCachedThemeSnapshot();
-    ReactDOM.createRoot(document.getElementById('root')!).render(
-      <App />
-    );
+    const rootEl = document.getElementById('root');
+    if (rootEl) {
+      ReactDOM.createRoot(rootEl).render(<App />);
+    }
   } catch (e: any) {
-    console.error('Mobile Render Error:', e);
+    console.error('Mobile Bootstrap Error:', e);
     document.getElementById('boot-splash')?.remove();
-    document.body.innerHTML = `<div style="color: white; background: #1a0000; padding: 20px; font-family: sans-serif;">
-      <h2>NOCTRA Render Error</h2>
-      <p>${e.message}</p>
-      <pre style="white-space: pre-wrap; font-size: 12px; color: #ff8888;">${e.stack || ''}</pre>
-    </div>`;
+    const root = document.getElementById('root');
+    if (root) {
+      root.innerHTML = `<div style="color: white; background: #1a0000; padding: 20px; font-family: sans-serif;">
+        <h2>NOCTRA Render Error</h2>
+        <p>${e.message}</p>
+        <pre style="white-space: pre-wrap; font-size: 12px; color: #ff8888;">${e.stack || ''}</pre>
+      </div>`;
+    }
   }
 }
 
