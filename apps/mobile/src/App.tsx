@@ -1,145 +1,124 @@
-import { useEffect, useState } from 'react';
-import { useLibraryStore, usePlaylistStore, usePlayerStore, useSettingsStore, useToastStore } from './store';
-import LibraryView from './components/LibraryView';
-import MiniPlayer from './components/MiniPlayer';
-import PlayerSheet from './components/PlayerSheet';
-import BottomNav from './components/BottomNav';
+import { useEffect, useRef, useState } from 'react';
+import { useLibraryStore, usePlayerStore, usePlaylistStore, useSettingsStore } from './store';
+import AudioEngine from './components/AudioEngine';
+import ToastContainer from './components/ToastContainer';
+import MainHeader from './components/MainHeader';
+import NowPlayingPane from './components/NowPlayingPane';
+import LibraryPane from './components/LibraryPane';
+import { markPerfEnd, markPerfStart, scheduleMemorySnapshot } from './perf';
 
-export type Tab = 'library' | 'playlists' | 'settings';
+export type Page = 'home' | 'library' | 'playlists' | 'playlist-detail' | 'settings';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<Tab>('library');
-  const [playerOpen, setPlayerOpen] = useState(false);
   const loadTracks = useLibraryStore(s => s.loadTracks);
+  const isLibraryLoading = useLibraryStore(s => s.isLoading);
+  const trackCount = useLibraryStore(s => s.tracks.length);
   const loadPlaylists = usePlaylistStore(s => s.loadPlaylists);
+  const playlistCount = usePlaylistStore(s => s.playlists.length);
   const loadSettings = useSettingsStore(s => s.loadSettings);
   const currentTrackId = usePlayerStore(s => s.currentTrackId);
-  const toasts = useToastStore(s => s.toasts);
+  const startupSawLoadingRef = useRef(false);
+  const startupLoggedRef = useRef(false);
+  const [isStartupReady, setIsStartupReady] = useState(false);
+  const [hasMinSplashElapsed, setHasMinSplashElapsed] = useState(false);
+  const [isAppVisible, setIsAppVisible] = useState(false);
+  const [isDashboardIntroActive, setIsDashboardIntroActive] = useState(false);
+  const [mobileTab, setMobileTab] = useState<'player' | 'library'>('player');
 
   useEffect(() => {
-    void Promise.allSettled([loadSettings(), loadTracks(), loadPlaylists()]);
-  }, [loadSettings, loadTracks, loadPlaylists]);
+    markPerfStart('app-startup');
+    void Promise.allSettled([loadSettings(), loadTracks(), loadPlaylists()]).then(() => {
+      setIsStartupReady(true);
+    });
+  }, [loadPlaylists, loadSettings, loadTracks]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setHasMinSplashElapsed(true);
+    }, 1500);
+
+    return () => window.clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    if (!isStartupReady || !hasMinSplashElapsed) return;
+    const timer = window.setTimeout(() => {
+      const bootSplash = document.getElementById('boot-splash');
+      if (bootSplash) {
+        bootSplash.classList.add('is-hiding');
+        window.setTimeout(() => {
+          bootSplash.remove();
+          setIsAppVisible(true);
+          setIsDashboardIntroActive(true);
+        }, 760);
+        return;
+      }
+      setIsAppVisible(true);
+      setIsDashboardIntroActive(true);
+    }, 340);
+
+    return () => window.clearTimeout(timer);
+  }, [hasMinSplashElapsed, isStartupReady]);
+
+  useEffect(() => {
+    if (!isDashboardIntroActive) return;
+    const timer = window.setTimeout(() => {
+      setIsDashboardIntroActive(false);
+    }, 1100);
+
+    return () => window.clearTimeout(timer);
+  }, [isDashboardIntroActive]);
+
+  useEffect(() => {
+    if (isLibraryLoading) {
+      startupSawLoadingRef.current = true;
+      return;
+    }
+    if (!startupSawLoadingRef.current || startupLoggedRef.current) return;
+    startupLoggedRef.current = true;
+    const meta = { tracks: trackCount, playlists: playlistCount };
+    markPerfEnd('app-startup', meta);
+    scheduleMemorySnapshot('app-startup-memory', meta);
+  }, [isLibraryLoading, playlistCount, trackCount]);
+
+  // When a track starts playing, open player tab on mobile
+  useEffect(() => {
+    if (currentTrackId) {
+      setMobileTab('player');
+    }
+  }, [currentTrackId]);
 
   return (
-    <div className="app-root">
-      {/* Page content */}
-      <main className="main-content">
-        {activeTab === 'library' && <LibraryView />}
-        {activeTab === 'playlists' && <PlaylistsView />}
-        {activeTab === 'settings' && <SettingsView />}
-      </main>
+    <div className={`app-root${isAppVisible ? ' startup-app-visible' : ' startup-app-hidden'}${isDashboardIntroActive ? ' startup-dashboard-intro' : ''}`}>
+      <AudioEngine />
+      <MainHeader />
 
-      {/* Bottom bar: mini player + nav */}
-      <div className="bottom-bar">
-        {currentTrackId && <MiniPlayer onExpand={() => setPlayerOpen(true)} />}
-        <BottomNav active={activeTab} onChange={setActiveTab} />
+      <div className={`app-container has-active-track ${mobileTab === 'player' ? 'show-player' : 'show-library'}`}>
+        <NowPlayingPane />
+        <LibraryPane />
       </div>
 
-      {/* Full-screen player overlay */}
-      <PlayerSheet isOpen={playerOpen} onClose={() => setPlayerOpen(false)} />
+      {/* Floating mobile view switcher */}
+      <nav className="mobile-view-nav" aria-label="Mobile View Navigation">
+        <button
+          type="button"
+          className={`mobile-view-btn ${mobileTab === 'player' ? 'active' : ''}`}
+          onClick={() => setMobileTab('player')}
+        >
+          <span>🎵</span>
+          <span>Now Playing</span>
+        </button>
+        <button
+          type="button"
+          className={`mobile-view-btn ${mobileTab === 'library' ? 'active' : ''}`}
+          onClick={() => setMobileTab('library')}
+        >
+          <span>📚</span>
+          <span>Library</span>
+        </button>
+      </nav>
 
-      {/* Toast notifications */}
-      <div className="toast-container">
-        {toasts.map(t => (
-          <div key={t.id} className="toast">{t.message}</div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// ── Inline simple views ───────────────────────────────────────────────────────
-function PlaylistsView() {
-  const playlists = usePlaylistStore(s => s.playlists);
-  const createPlaylist = usePlaylistStore(s => s.createPlaylist);
-  const [name, setName] = useState('');
-
-  const handleCreate = async () => {
-    const trimmed = name.trim();
-    if (!trimmed) return;
-    await createPlaylist(trimmed);
-    setName('');
-  };
-
-  return (
-    <div className="view-wrapper">
-      <div className="view-header">
-        <h1 className="view-title">Playlists</h1>
-      </div>
-      <div className="create-playlist-row">
-        <input
-          className="create-playlist-input"
-          placeholder="Nama playlist baru..."
-          value={name}
-          onChange={e => setName(e.target.value)}
-          onKeyDown={e => e.key === 'Enter' && handleCreate()}
-        />
-        <button className="btn-accent" onClick={handleCreate}>+</button>
-      </div>
-      {playlists.length === 0 && (
-        <div className="empty-state">
-          <p>Belum ada playlist</p>
-        </div>
-      )}
-      <div className="list-container">
-        {playlists.map(pl => (
-          <div key={pl.id} className="list-item">
-            <div className="list-item-art playlist-art">♬</div>
-            <div className="list-item-info">
-              <span className="list-item-title">{pl.name}</span>
-              <span className="list-item-sub">{pl.trackIds.length} lagu</span>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function SettingsView() {
-  const { settings, saveSettings } = useSettingsStore();
-  const clearAll = useLibraryStore(s => s.clearAll);
-
-  return (
-    <div className="view-wrapper">
-      <div className="view-header">
-        <h1 className="view-title">Pengaturan</h1>
-      </div>
-      <div className="settings-list">
-        <div className="settings-group">
-          <div className="settings-label">Tema</div>
-          <div className="settings-options">
-            {(['graphite', 'dark', 'light', 'midnight'] as const).map(theme => (
-              <button
-                key={theme}
-                className={`settings-chip ${settings.theme === theme ? 'active' : ''}`}
-                onClick={() => saveSettings({ theme })}
-              >
-                {theme}
-              </button>
-            ))}
-          </div>
-        </div>
-        <div className="settings-group">
-          <div className="settings-label">Accent Color</div>
-          <input
-            type="color"
-            value={settings.accentColor}
-            onChange={e => saveSettings({ accentColor: e.target.value })}
-            className="color-picker"
-          />
-        </div>
-        <div className="settings-group settings-danger">
-          <button
-            className="btn-danger"
-            onClick={() => {
-              if (window.confirm('Hapus semua lagu dari library?')) clearAll();
-            }}
-          >
-            🗑 Hapus Semua Library
-          </button>
-        </div>
-      </div>
+      <ToastContainer />
     </div>
   );
 }

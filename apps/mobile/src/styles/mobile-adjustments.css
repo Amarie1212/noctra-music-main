@@ -1,0 +1,132 @@
+/* Mobile adjustments layered on top of the original desktop global.css */
+
+:root {
+  --mobile-safe-top: env(safe-area-inset-top, 0px);
+  --mobile-safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Hide desktop-only window control buttons (minimize, maximize, close) */
+.window-controls {
+  display: none !important;
+}
+
+/* Ensure app-root fits mobile viewport with notch support */
+.app-root {
+  padding-top: var(--mobile-safe-top);
+  padding-bottom: var(--mobile-safe-bottom);
+  height: 100dvh !important;
+  width: 100vw !important;
+  overflow: hidden;
+}
+
+/* Mobile responsive layout */
+@media (max-width: 860px) {
+  .app-container {
+    flex-direction: column !important;
+    overflow: hidden !important;
+    position: relative;
+    flex: 1;
+    min-height: 0;
+  }
+
+  /* Mobile view switcher pill at bottom */
+  .mobile-view-nav {
+    display: flex !important;
+    position: fixed;
+    bottom: calc(var(--mobile-safe-bottom) + 12px);
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 999;
+    background: rgba(18, 22, 36, 0.88);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 999px;
+    padding: 4px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    gap: 4px;
+  }
+
+  .mobile-view-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 18px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary, #94a3b8);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .mobile-view-btn.active {
+    background: var(--accent, #6366f1);
+    color: #ffffff;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+  }
+
+  /* Toggle pane visibility on mobile */
+  .app-container.show-player .library-pane {
+    display: none !important;
+  }
+
+  .app-container.show-player .now-playing-pane {
+    display: flex !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    flex: 1 !important;
+    padding-bottom: 72px;
+  }
+
+  .app-container.show-library .now-playing-pane {
+    display: none !important;
+  }
+
+  .app-container.show-library .library-pane {
+    display: flex !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    flex: 1 !important;
+    padding-bottom: 72px;
+  }
+
+  /* Adjust NowPlaying album art size on small screens */
+  .album-art-container {
+    max-width: min(72vw, 300px) !important;
+    max-height: min(72vw, 300px) !important;
+    margin: 12px auto !important;
+  }
+
+  .now-playing-pane-inner {
+    padding: 12px 16px !important;
+    gap: 12px !important;
+  }
+
+  /* MainHeader tweaks on mobile */
+  .main-header {
+    padding: 8px 12px !important;
+    gap: 8px !important;
+  }
+
+  .app-title {
+    font-size: 16px !important;
+  }
+
+  .header-actions {
+    gap: 6px !important;
+  }
+
+  .header-btn {
+    padding: 6px 10px !important;
+    font-size: 12px !important;
+  }
+}
+
+@media (min-width: 861px) {
+  .mobile-view-nav {
+    display: none !important;
+  }
+}
