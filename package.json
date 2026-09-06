@@ -1,0 +1,21 @@
+{
+  "name": "desktop",
+  "version": "0.0.0-a1",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm --dir apps/desktop dev",
+    "build": "pnpm --dir apps/desktop build",
+    "build:bundle": "pnpm --dir apps/desktop build:bundle",
+    "build:installer": "pnpm --dir apps/desktop build:installer",
+    "preview": "pnpm --dir apps/desktop preview"
+  },
+  "main": "dist-electron/main.js",
+  "dependencies": {
+    "@music/core": "workspace:*",
+    "better-sqlite3": "^11.7.0",
+    "electron-store": "^10.0.0",
+    "electron-updater": "^6.8.3",
+    "fs-extra": "^11.3.4",
+    "music-metadata": "^7.14.0"
+  }
+}

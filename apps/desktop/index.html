@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Music Player</title>
+    <style>
+      html,
+      body,
+      #root {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        background:
+          radial-gradient(circle at 50% 45%, rgba(46, 80, 168, 0.2), transparent 24%),
+          radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.08), transparent 18%),
+          radial-gradient(circle at 80% 72%, rgba(58, 110, 201, 0.16), transparent 26%),
+          linear-gradient(180deg, #02030a 0%, #04050d 35%, #000000 100%);
+        overflow: hidden;
+      }
+
+      body {
+        font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+      }
+
+      .boot-splash {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        display: grid;
+        place-items: center;
+        overflow: hidden;
+        pointer-events: none;
+        opacity: 1;
+        visibility: visible;
+        transition: opacity 0.7s ease, transform 0.7s ease, visibility 0.7s ease;
+      }
+
+      .boot-splash.is-hiding {
+        opacity: 0;
+        visibility: hidden;
+        transform: scale(1.035);
+      }
+
+      .boot-splash::before,
+      .boot-splash::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+      }
+
+      .boot-splash::before {
+        background:
+          radial-gradient(circle at 34% 40%, rgba(78, 120, 255, 0.16), transparent 26%),
+          radial-gradient(circle at 62% 58%, rgba(255, 255, 255, 0.06), transparent 16%),
+          radial-gradient(circle at 74% 34%, rgba(76, 133, 255, 0.12), transparent 20%);
+        filter: blur(24px);
+      }
+
+      .boot-splash::after {
+        background-image:
+          radial-gradient(circle at 8% 16%, rgba(255,255,255,0.96) 0 1px, transparent 2px),
+          radial-gradient(circle at 14% 58%, rgba(255,255,255,0.86) 0 1.5px, transparent 2.5px),
+          radial-gradient(circle at 22% 28%, rgba(255,255,255,0.78) 0 1px, transparent 2px),
+          radial-gradient(circle at 37% 14%, rgba(255,255,255,0.9) 0 1.5px, transparent 2.5px),
+          radial-gradient(circle at 45% 64%, rgba(255,255,255,0.82) 0 1px, transparent 2px),
+          radial-gradient(circle at 52% 36%, rgba(255,255,255,0.92) 0 1.5px, transparent 2.5px),
+          radial-gradient(circle at 68% 72%, rgba(255,255,255,0.82) 0 1.5px, transparent 2.5px),
+          radial-gradient(circle at 74% 26%, rgba(255,255,255,0.76) 0 1px, transparent 2px),
+          radial-gradient(circle at 82% 54%, rgba(255,255,255,0.95) 0 1.5px, transparent 2.5px),
+          radial-gradient(circle at 89% 18%, rgba(255,255,255,0.86) 0 1px, transparent 2px),
+          radial-gradient(circle at 11% 84%, rgba(255,255,255,0.82) 0 1.5px, transparent 2.5px),
+          radial-gradient(circle at 49% 86%, rgba(255,255,255,0.88) 0 1px, transparent 2px),
+          radial-gradient(circle at 79% 82%, rgba(255,255,255,0.82) 0 1px, transparent 2px),
+          radial-gradient(circle at 92% 66%, rgba(255,255,255,0.9) 0 1.5px, transparent 2.5px);
+        opacity: 0.9;
+      }
+
+      .boot-splash-center {
+        position: relative;
+        z-index: 1;
+        display: grid;
+        place-items: center;
+        gap: 14px;
+      }
+
+      .boot-splash-halo {
+        position: absolute;
+        width: 170px;
+        height: 170px;
+        border-radius: 999px;
+        background: radial-gradient(circle, rgba(114, 154, 255, 0.3) 0%, rgba(114, 154, 255, 0.12) 34%, transparent 72%);
+        filter: blur(10px);
+        animation: boot-halo 3.2s ease-in-out infinite;
+      }
+
+      .boot-splash-logo {
+        position: relative;
+        z-index: 1;
+        width: 108px;
+        height: 108px;
+        display: block;
+        object-fit: contain;
+        backface-visibility: hidden;
+        filter:
+          drop-shadow(0 0 18px rgba(255, 255, 255, 0.2))
+          drop-shadow(0 0 30px rgba(102, 147, 255, 0.26));
+        animation: boot-spin 18s linear infinite;
+      }
+
+      .boot-splash-logo-motion {
+        position: relative;
+        z-index: 1;
+        animation: boot-float 3.8s ease-in-out infinite;
+      }
+
+      .boot-splash-title {
+        position: relative;
+        z-index: 1;
+        font-size: 0.9rem;
+        letter-spacing: 0.5rem;
+        text-indent: 0.5rem;
+        color: rgba(235, 241, 255, 0.82);
+        text-transform: uppercase;
+      }
+
+      @keyframes boot-float {
+        0%, 100% { transform: translateY(0) scale(0.98); }
+        50% { transform: translateY(-5px) scale(1.02); }
+      }
+
+      @keyframes boot-spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+      }
+
+      @keyframes boot-halo {
+        0%, 100% { opacity: 0.58; transform: scale(0.94); }
+        50% { opacity: 0.95; transform: scale(1.08); }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <div id="boot-splash" class="boot-splash" aria-hidden="true">
+      <div class="boot-splash-center">
+        <div class="boot-splash-halo"></div>
+        <div class="boot-splash-logo-motion">
+          <img src="/build/icon.png" alt="NOCTRA" class="boot-splash-logo" />
+        </div>
+        <div class="boot-splash-title">NOCTRA</div>
+      </div>
+    </div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

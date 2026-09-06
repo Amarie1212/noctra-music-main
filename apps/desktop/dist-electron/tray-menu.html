@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    :root {
+      --bg: #15181d;
+      --panel: #15181d;
+      --fg: #f8f8fa;
+      --muted: rgba(248, 248, 250, 0.62);
+      --accent: #20c997;
+      --accent-soft: color-mix(in srgb, var(--accent) 18%, transparent);
+      --hover: color-mix(in srgb, var(--accent) 14%, transparent);
+      --border: color-mix(in srgb, var(--accent) 22%, rgba(255, 255, 255, 0.12));
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: transparent;
+      font-family: "Segoe UI", system-ui, sans-serif;
+      overflow: hidden;
+      user-select: none;
+      color: var(--fg);
+      display: flex;
+      align-items: flex-end;
+      height: 100vh;
+    }
+
+    .container {
+      background: var(--bg);
+      backdrop-filter: blur(32px) saturate(160%);
+      -webkit-backdrop-filter: blur(32px) saturate(200%);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      width: 100%;
+      min-height: 100%;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 20px 56px rgba(0, 0, 0, 0.58), 0 0 0 1px color-mix(in srgb, var(--accent) 8%, transparent), inset 0 1px 0 rgba(255, 255, 255, 0.07);
+      transform-origin: right bottom;
+      animation: tray-open 0.42s cubic-bezier(0.16, 1.25, 0.3, 1) both;
+    }
+
+    body.closing .container {
+      animation: tray-close 0.2s cubic-bezier(0.55, 0, 1, 0.45) both;
+    }
+
+    @keyframes tray-open {
+      0% { opacity: 0; transform: translateY(18px) scale(0.82); }
+      65% { opacity: 1; transform: translateY(-2px) scale(1.012); }
+      100% { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    @keyframes tray-close {
+      from { opacity: 1; transform: translateY(0) scale(1); }
+      to { opacity: 0; transform: translateY(18px) scale(0.82); }
+    }
+
+    .now-playing {
+      margin-bottom: 16px;
+      min-height: 58px;
+    }
+
+    .progress-track {
+      height: 4px;
+      margin-top: 12px;
+      overflow: hidden;
+      border-radius: 99px;
+      background: color-mix(in srgb, var(--fg) 14%, transparent);
+    }
+
+    #progress-fill {
+      width: 0%;
+      height: 100%;
+      border-radius: inherit;
+      background: var(--accent);
+      transition: width 0.25s linear;
+    }
+
+    .status-label {
+      font-size: 10px;
+      font-weight: 700;
+      color: color-mix(in srgb, var(--accent) 88%, white);
+      letter-spacing: 0.14em;
+      opacity: 0.92;
+      margin-bottom: 7px;
+      display: block;
+      text-transform: uppercase;
+    }
+
+    #track-title {
+      font-size: 15px;
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-bottom: 4px;
+    }
+
+    #track-artist {
+      font-size: 12px;
+      color: var(--muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .controls {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 16px;
+      background: color-mix(in srgb, var(--accent) 7%, rgba(255, 255, 255, 0.04));
+      padding: 9px;
+      border: 1px solid color-mix(in srgb, var(--accent) 12%, transparent);
+      border-radius: 14px;
+    }
+
+    .btn-control {
+      background: none;
+      border: none;
+      color: var(--fg);
+      cursor: pointer;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.18s ease, color 0.18s ease, transform 0.12s ease;
+    }
+
+    .controls .btn-control {
+      width: 34px;
+      height: 34px;
+    }
+
+    .controls .btn-control.active {
+      color: var(--accent);
+      background: color-mix(in srgb, var(--accent) 14%, transparent);
+    }
+
+    .btn-control:hover { background: var(--hover); color: color-mix(in srgb, var(--accent) 74%, white); }
+    .btn-control:active { transform: scale(0.92); }
+
+    .btn-control.play {
+      background: var(--accent);
+      color: #101614;
+      box-shadow: 0 8px 18px color-mix(in srgb, var(--accent) 28%, transparent);
+    }
+    .btn-control.play:hover { background: color-mix(in srgb, var(--accent) 84%, white); }
+
+    .btn-control svg { width: 20px; height: 20px; }
+
+    .actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn-action {
+      flex: 1;
+      background: color-mix(in srgb, var(--accent) 7%, rgba(255, 255, 255, 0.05));
+      border: 1px solid color-mix(in srgb, var(--accent) 12%, transparent);
+      color: var(--fg);
+      padding: 9px 8px;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+    }
+
+    .btn-action:hover { background: var(--hover); border-color: var(--border); color: color-mix(in srgb, var(--accent) 72%, white); }
+    .btn-action.danger:hover { background: rgba(255, 76, 96, 0.14); color: #ff8791; border-color: rgba(255, 116, 126, 0.28); }
+
+    .mode-right .controls,
+    .mode-right #btn-open-label,
+    .mode-right .now-playing {
+      display: none;
+    }
+
+    .mode-right .now-playing {
+      margin-bottom: 0;
+    }
+
+    .mode-right #btn-exit-label {
+      display: block;
+      flex: 0 0 auto;
+      min-width: 0;
+      width: auto;
+      padding-inline: 24px;
+    }
+
+    .mode-right .actions {
+      justify-content: flex-end;
+      width: auto;
+    }
+
+    .mode-right .container {
+      width: auto;
+      min-height: 0;
+      padding: 10px;
+      border-radius: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container" id="main-container">
+    <div class="now-playing">
+      <span class="status-label" id="status-label">...</span>
+      <div id="track-title">Memuat...</div>
+      <div id="track-artist">...</div>
+      <div class="progress-track" aria-hidden="true"><div id="progress-fill"></div></div>
+    </div>
+
+    <div class="controls">
+      <button id="shuffle-btn" class="btn-control" title="Shuffle" onclick="cmd('toggle-shuffle')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h3c4 0 6 10 10 10h3"/><path d="m17 14 3 3-3 3"/><path d="M4 17h3c1.1 0 2-0.5 2.8-1.3"/><path d="M14.2 8.3C15 7.5 16 7 17 7h3"/><path d="m17 4 3 3-3 3"/></svg>
+      </button>
+      <button class="btn-control" onclick="cmd('previous-track')">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"/></svg>
+      </button>
+      <button id="play-pause" class="btn-control play" onclick="cmd('toggle-play')">
+        <svg id="svg-play" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+        <svg id="svg-pause" style="display:none" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+      </button>
+      <button class="btn-control" onclick="cmd('next-track')">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 6h2v12h-2zm-2.5 6L5 6v12z"/></svg>
+      </button>
+      <button id="repeat-btn" class="btn-control" title="Repeat" onclick="cmd('toggle-repeat')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m17 2 4 4-4 4"/><path d="M3 11V9a3 3 0 0 1 3-3h15"/><path d="m7 22-4-4 4-4"/><path d="M21 13v2a3 3 0 0 1-3 3H3"/></svg>
+      </button>
+    </div>
+
+    <div class="actions">
+      <button class="btn-action" id="btn-open-label" onclick="window.ipcRenderer.send('tray-menu:open')">Buka</button>
+      <button class="btn-action danger" id="btn-exit-label" onclick="window.ipcRenderer.send('tray-menu:exit')">Keluar</button>
+    </div>
+  </div>
+
+  <script>
+    const { ipcRenderer } = require('electron');
+    window.ipcRenderer = ipcRenderer;
+    const mode = new URLSearchParams(window.location.search).get('mode') || 'left';
+    document.body.classList.add(`mode-${mode}`);
+
+    function cmd(name) {
+      ipcRenderer.send('tray-menu:command', name);
+    }
+
+    ipcRenderer.on('tray:update-state', (event, state) => {
+      if (!state) return;
+      document.getElementById('track-title').textContent = state.title || 'Tidak Ada Lagu';
+      document.getElementById('track-artist').textContent = state.artist || 'Pilih lagu untuk memutar';
+      const progress = state.duration > 0 ? Math.max(0, Math.min(100, (state.position / state.duration) * 100)) : 0;
+      document.getElementById('progress-fill').style.width = `${progress}%`;
+      document.getElementById('shuffle-btn').classList.toggle('active', Boolean(state.shuffle));
+      document.getElementById('repeat-btn').classList.toggle('active', state.repeat && state.repeat !== 'off');
+      
+      // Theme matching
+      if (state.accent) document.documentElement.style.setProperty('--accent', state.accent);
+      if (state.surface) document.documentElement.style.setProperty('--bg', state.surface);
+      if (state.panel) document.documentElement.style.setProperty('--panel', state.panel);
+      if (state.textPrimary) document.documentElement.style.setProperty('--fg', state.textPrimary);
+      if (state.textSecondary) document.documentElement.style.setProperty('--muted', state.textSecondary);
+      if (state.border) document.documentElement.style.setProperty('--border', state.border);
+      if (state.theme) document.body.dataset.theme = state.theme;
+
+      // Localized labels
+      if (state.labels) {
+        document.getElementById('btn-open-label').textContent = state.labels.open;
+        document.getElementById('btn-exit-label').textContent = state.labels.exit;
+        
+        const isPlaying = state.isPlaying;
+        document.getElementById('status-label').textContent = isPlaying ? state.labels.nowPlaying : state.labels.paused;
+        
+        document.getElementById('svg-play').style.display = isPlaying ? 'none' : 'block';
+        document.getElementById('svg-pause').style.display = isPlaying ? 'block' : 'none';
+        
+        const label = document.getElementById('status-label');
+        label.style.color = 'var(--accent)';
+        label.style.opacity = isPlaying ? '0.92' : '0.62';
+      }
+    });
+
+    // Initial state request
+    ipcRenderer.send('tray-menu:get-state');
+  </script>
+</body>
+</html>

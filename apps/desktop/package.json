@@ -1,0 +1,93 @@
+{
+  "name": "desktop",
+  "version": "0.0.0-a4",
+  "description": "NOCTRA Music Player",
+  "author": "Amarie1212",
+  "private": true,
+  "main": "dist-electron/main.js",
+  "build": {
+    "appId": "com.noctra.app",
+    "productName": "NOCTRA",
+    "electronVersion": "33.4.11",
+    "npmRebuild": false,
+    "compression": "normal",
+    "files": [
+      "dist-renderer/**/*",
+      "dist-electron/**/*",
+      "package.json"
+    ],
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "Amarie1212",
+        "repo": "Music"
+      }
+    ],
+    "directories": {
+      "output": "../../release"
+    },
+    "win": {
+      "target": "nsis"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "perMachine": false,
+      "allowElevation": true,
+      "runAfterFinish": true,
+      "deleteAppDataOnUninstall": true,
+      "differentialPackage": false,
+      "createDesktopShortcut": "always",
+      "createStartMenuShortcut": true,
+      "artifactName": "${productName}-Setup.${ext}"
+    },
+    "extraResources": [
+      {
+        "from": "build/icon.png",
+        "to": "build/icon.png"
+      }
+    ]
+  },
+  "scripts": {
+    "clean:dist": "powershell -NoProfile -Command \"Remove-Item -Recurse -Force dist, dist-electron, dist-renderer -ErrorAction SilentlyContinue\"",
+    "dev:electron": "tsup --watch",
+    "dev:vite": "vite",
+    "dev": "concurrently -k \"pnpm run dev:vite\" \"pnpm run dev:electron\" \"npx wait-on http://127.0.0.1:5173 && electron .\"",
+    "build:electron": "tsup",
+    "build:renderer": "vite build",
+    "build:bundle": "concurrently \"pnpm run build:electron\" \"pnpm run build:renderer\"",
+    "build:installer": "pnpm run build:bundle && electron-builder --publish never",
+    "build:local": "pnpm run clean:dist && pnpm run build:bundle && electron-builder --publish never",
+    "build:publish": "pnpm run clean:dist && pnpm run build:bundle && electron-builder --publish always",
+    "release:github": "pnpm run build:publish",
+    "build": "pnpm run build:local",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@music/core": "workspace:*",
+    "better-sqlite3": "^11.7.0",
+    "electron-store": "^10.0.0",
+    "electron-updater": "^6.8.3",
+    "fs-extra": "^11.3.4",
+    "music-metadata": "^7.14.0"
+  },
+  "devDependencies": {
+    "@electron/rebuild": "^4.0.3",
+    "@types/better-sqlite3": "^7.6.12",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^4.3.0",
+    "concurrently": "^9.0.0",
+    "electron": "^33.2.0",
+    "electron": "33.4.11",
+    "electron-builder": "^24.13.3",
+    "png-to-ico": "^3.0.1",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "tsup": "^8.5.1",
+    "typescript": "^5.6.0",
+    "vite": "^6.0.0",
+    "wait-on": "^9.0.4",
+    "zustand": "^5.0.0"
+  }
+}
