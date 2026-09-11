@@ -22,7 +22,6 @@ export default function App() {
   const toggleShuffle = usePlayerStore(s => s.toggleShuffle);
   const toggleRepeat = usePlayerStore(s => s.toggleRepeat);
   const currentTrackId = usePlayerStore(s => s.currentTrackId);
-
   const startupSawLoadingRef = useRef(false);
   const startupLoggedRef = useRef(false);
   const [isStartupReady, setIsStartupReady] = useState(false);
@@ -38,12 +37,11 @@ export default function App() {
     });
   }, [loadPlaylists, loadSettings, loadTracks]);
 
-  // Minimum splash time of 1.2 seconds, then ready
   useEffect(() => {
     const timer = window.setTimeout(() => {
       setHasMinSplashElapsed(true);
       setIsStartupReady(true);
-    }, 1200);
+    }, 1500);
 
     return () => window.clearTimeout(timer);
   }, []);
@@ -89,12 +87,7 @@ export default function App() {
     scheduleMemorySnapshot('app-startup-memory', meta);
   }, [isLibraryLoading, playlistCount, trackCount]);
 
-  useEffect(() => {
-    if (currentTrackId) {
-      setMobileTab('player');
-    }
-  }, [currentTrackId]);
-
+  // When a track starts playing, open player tab on mobile
   useEffect(() => {
     if (!window.api?.window?.onTrayPlayerCommand) return;
     return window.api.window.onTrayPlayerCommand(command => {
@@ -119,6 +112,50 @@ export default function App() {
       }
     });
   }, [skipNext, skipPrev, togglePlay, toggleRepeat, toggleShuffle]);
+
+  useEffect(() => {
+    if (currentTrackId) {
+      setMobileTab('player');
+    }
+  }, [currentTrackId]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.code === 'Space') {
+        const target = e.target as HTMLElement;
+        const isInput =
+          target.tagName === 'INPUT' ||
+          target.tagName === 'TEXTAREA' ||
+          target.isContentEditable ||
+          target.closest('input, textarea, [contenteditable="true"]');
+
+        if (isInput) return;
+
+        e.preventDefault();
+        togglePlay();
+        return;
+      }
+
+      const target = e.target as HTMLElement;
+      const isInput =
+        target.tagName === 'INPUT' ||
+        target.tagName === 'TEXTAREA' ||
+        target.isContentEditable ||
+        target.closest('input, textarea, [contenteditable="true"]');
+      if (isInput) return;
+
+      if (e.code === 'ArrowRight') {
+        e.preventDefault();
+        skipNext();
+      } else if (e.code === 'ArrowLeft') {
+        e.preventDefault();
+        skipPrev();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [skipNext, skipPrev, togglePlay]);
 
   return (
     <div className={`app-root${isAppVisible ? ' startup-app-visible' : ' startup-app-hidden'}${isDashboardIntroActive ? ' startup-dashboard-intro' : ''}`}>
